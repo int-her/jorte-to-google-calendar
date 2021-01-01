@@ -30,8 +30,10 @@ interface GoogleCalendarEvent {
 const jorteFilePath: string = 'json/sample.json' // json
 const googleFilePath: string = 'csv/sample.csv' // csv
 const isMidnightEventToAllDayEvent: boolean = true
-const includeKeywords: string[] = []
-const excludeKeywords: string[] = []
+const includeKeywords: string[] = ['include']
+const excludeKeywords: string[] = ['exclude']
+const isIncludeKeywordsCaseSensitive = false
+const isExcludeKeywordsCaseSensitive = false
 
 const main = async () => {
   const fileData = await readFile(jorteFilePath)
@@ -40,7 +42,11 @@ const main = async () => {
 
   if (includeKeywords.length) {
     events.forEach((event: GoogleCalendarEvent) => {
-      event.isFiltered = !includeKeywords.some(keyword => event.title.includes(keyword))
+      if (isIncludeKeywordsCaseSensitive) {
+        event.isFiltered = !includeKeywords.some(keyword => event.title.includes(keyword))
+      } else {
+        event.isFiltered = !includeKeywords.some(keyword => event.title.toLowerCase().includes(keyword.toLowerCase()))
+      }
     })
   } else {
     events.forEach((event: GoogleCalendarEvent) => {
@@ -50,8 +56,14 @@ const main = async () => {
 
   if (excludeKeywords.length) {
     events.forEach((event: GoogleCalendarEvent) => {
-      if (includeKeywords.some(keyword => event.title.includes(keyword))) {
-        event.isFiltered = true
+      if (isExcludeKeywordsCaseSensitive) {
+        if (excludeKeywords.some(keyword => event.title.includes(keyword))) {
+          event.isFiltered = true
+        }
+      } else {
+        if (excludeKeywords.some(keyword => event.title.toLowerCase().includes(keyword.toLowerCase()))) {
+          event.isFiltered = true
+        }
       }
     })
   }
